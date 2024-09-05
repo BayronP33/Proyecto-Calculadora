@@ -3,6 +3,7 @@
 import tkinter as tk
 from vista_cal_basica import VistaCalculadora
 from model_defs_calculadora import ModeloCalculadora
+from math import perm, comb
 import subprocess
 import sys
 import tkinter.messagebox as tk_messagebox
@@ -44,45 +45,61 @@ class ControladorCalculadora:
         self.vista.actualizar_panel_historial(historial)
 
     def al_hacer_clic_en_boton(self, caracter):
+        
         if self.vista.resultado_mostrado:
             if caracter not in ('+', '-', '*', '÷', '^'):
-                self.vista.ecuacion.set("")  # Reiniciar solo si no es un operador
+                self.vista.ecuacion.set("") 
                 self.vista.resultado_mostrado = False
 
         if caracter == '=':
             operacion = self.vista.ecuacion.get()
-            resultado = self.modelo.calcular_resultado(operacion, self.modelo.modo_grados)
+            if 'x' in operacion:
+                resultado = self.modelo.resolver_ecuacion_lineal(operacion)
+            else:
+                resultado = self.modelo.calcular_resultado(operacion, self.modelo.modo_grados)
+            
             self.vista.ecuacion.set(resultado)
             operacion_completa = f'{operacion} = {resultado}'
             self.modelo.agregar_al_historial(operacion_completa)
-            self.actualizar_historiales()  # Actualizar ambos historiales (usuario y general)
+            self.actualizar_historiales() 
+            
             self.vista.resultado_mostrado = True
         elif caracter in ('+', '-', '*', '÷', '^'):
             if self.vista.resultado_mostrado:
-                self.vista.ecuacion.set(self.vista.ecuacion.get() + caracter)  # Continuar con la operación
+                self.vista.ecuacion.set(self.vista.ecuacion.get() + caracter)  
                 self.vista.resultado_mostrado = False
             else:
                 self.vista.ecuacion.set(self.vista.ecuacion.get() + caracter)
         elif caracter == 'AC':
             self.vista.ecuacion.set("")
         elif caracter == '√':
-            self.vista.ecuacion.set(self.vista.ecuacion.get() + "√[")
-        elif caracter == ']':
+            self.vista.ecuacion.set(self.vista.ecuacion.get() + "√[2](")
+        elif caracter == '√()':
             self.vista.ecuacion.set(self.vista.ecuacion.get() + "](")
         elif caracter.lower() == 'del':
             self.vista.ecuacion.set(self.vista.ecuacion.get()[:-1])
         elif caracter in ['π', 'e', '10^']:
             self.vista.ecuacion.set(self.vista.ecuacion.get() + caracter)
         elif caracter == '|a|':
-            self.vista.ecuacion.set(self.vista.ecuacion.get() + "abs(")
+            self.vista.ecuacion.set(self.vista.ecuacion.get() + "|")
         elif caracter == 'a/b':
-            self.vista.ecuacion.set(self.vista.ecuacion.get() + "Fraction(")
+            self.vista.ecuacion.set(self.vista.ecuacion.get() + "a/b")
+            
         elif caracter in {'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'log', 'ln'}:
-            self.vista.ecuacion.set(self.vista.ecuacion.get() + f"{caracter}(")
+            if caracter == 'ln':
+                self.vista.ecuacion.set(self.vista.ecuacion.get() + "ln(") 
+            elif caracter == 'log':
+                self.vista.ecuacion.set(self.vista.ecuacion.get() + "log(")
+            else:
+                self.vista.ecuacion.set(self.vista.ecuacion.get() + f"{caracter}(")
         elif caracter == '10^':
             self.vista.ecuacion.set(self.vista.ecuacion.get() + "10**")
-        elif caracter in {'nPr', 'nCr'}:
-            self.vista.ecuacion.set(self.vista.ecuacion.get() + f"{caracter}(")
+        
+        elif caracter == 'nPr':
+            self.vista.ecuacion.set(self.vista.ecuacion.get() + "nPr(a,b)")
+        elif caracter == 'nCr':
+            self.vista.ecuacion.set(self.vista.ecuacion.get() + "nCr(a,b)")
+
         elif caracter == 'Deg':
             self.modelo.modo_grados = True
             tk_messagebox.showinfo("Modo", "Modo Grados Activado")
